@@ -5,7 +5,7 @@ from PIL import Image
 pytesseract.pytesseract.tesseract_cmd = r'E:\Projects\tessaract\tesseract.exe'
 
 # Path to the image file
-image_path = r'E:\Projects\tax_parser\testing\Screenshot_20250202_163649_Tax Asaan.jpg'
+image_path = r'E:\Projects\OCR\ocr_testing\gray_images\gray_test.jpg'
 
 # Open the image file
 image = Image.open(image_path)
@@ -14,5 +14,5 @@ image = Image.open(image_path)
 text = pytesseract.image_to_string(image)
 
 # Print the extracted text
-print(text)
-print("Done")
+with open(r'E:\Projects\OCR\ocr_testing\tessaract_output_grey.txt', 'w') as f:
+  f.write(str(text))
