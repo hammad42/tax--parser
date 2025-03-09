@@ -50,7 +50,7 @@ def draw_boxes_on_image(image, json_data):
 
         # Put the text above the top-left corner (using red color).
         # Adjust font scale and thickness as needed.
-        cv2.putText(image, text, (top_left[0], top_left[1] - 5),
+        cv2.putText(image, text, (top_left[0], top_left[1] - 1),
                     cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.5, color=(0, 0, 255), thickness=1)
 
     return image
