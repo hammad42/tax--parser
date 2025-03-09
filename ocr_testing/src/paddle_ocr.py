@@ -11,7 +11,7 @@ def perform_paddle_ocr(image_path: str, use_gpu: bool = True, lang: str = 'en') 
     Performs OCR using PaddleOCR on the given image and extracts text.
 
     Args:
-        image_path: The path to the image file.
+        image_path: The path to the image file or in bytes.
         use_gpu: Whether to use GPU for OCR processing.
         lang: Language to use for OCR.
 

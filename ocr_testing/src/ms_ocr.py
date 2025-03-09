@@ -1,15 +1,16 @@
 import time
 import os
+from io import BytesIO
 from azure.cognitiveservices.vision.computervision import ComputerVisionClient
 from msrest.authentication import CognitiveServicesCredentials
 from typing import Dict, List, Any
 
-def perform_ocr(image_path: str) -> List[Dict[str, Any]]:
+def perform_ocr(image) -> List[Dict[str, Any]]:
     """
     Performs OCR on the given image and extracts text.
 
     Args:
-        image_path: The path to the image file.
+        image: The path to the image file, image as bytes, or a file-like object.
 
     Returns:
         A list of dictionaries, where each dictionary contains extracted text and bounding box information.
@@ -24,24 +25,37 @@ def perform_ocr(image_path: str) -> List[Dict[str, Any]]:
 
     try:
         client = ComputerVisionClient(azure_endpoint, CognitiveServicesCredentials(azure_key))
-
-        with open(image_path, "rb") as image_file:
-            response = client.read_in_stream(image_file, raw=True)
+        
+        # Check if image is a string (file path)
+        if isinstance(image, str):
+            with open(image, "rb") as image_file:
+                response = client.read_in_stream(image_file, raw=True)
+        # If image is bytes, wrap it in BytesIO to make it file-like
+        elif isinstance(image, bytes):
+            stream = BytesIO(image)
+            response = client.read_in_stream(stream, raw=True)
+        # If it's already a file-like object, use it directly
+        elif hasattr(image, "read"):
+            response = client.read_in_stream(image, raw=True)
+        else:
+            print("Error: Unsupported image input type.")
+            return []
 
         operation_location = response.headers["Operation-Location"]
         operation_id = operation_location.split("/")[-1]
 
+        # Poll for the result
         while True:
             result = client.get_read_result(operation_id)
             if result.status.lower() not in ['notstarted', 'running']:
                 break
-            time.sleep(0.1) #increased sleep time.
+            time.sleep(0.1)
 
         result = client.get_read_result(operation_id)
         return _extract_text_from_new_format(result.as_dict())
 
     except FileNotFoundError:
-        print(f"Error: Image file not found at {image_path}")
+        print(f"Error: Image file not found at {image}")
         return []
     except Exception as e:
         print(f"An error occurred: {e}")
@@ -73,6 +87,7 @@ def _extract_text_from_new_format(data: Dict[str, Any]) -> List[Dict[str, Any]]:
             extracted_data_lst.append(item)
 
     return extracted_data_lst
+
 
 if __name__ == "__main__":
     image_file_path = r"E:\Projects\OCR\ocr_testing\samples\color_images\Screenshot_20250211-235442_1.png"

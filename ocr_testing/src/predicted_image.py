@@ -1,5 +1,6 @@
 import cv2
 import json
+import numpy as np
 
 
 def draw_boxes_on_image(image, json_data):
@@ -17,7 +18,13 @@ def draw_boxes_on_image(image, json_data):
     Returns:
         np.ndarray: The image with bounding boxes and text drawn on it.
     """
-    image = cv2.imread(image)
+    if isinstance(image, str):
+        image = cv2.imread(image)
+    
+    # If image is bytes, convert it to a NumPy array and decode.
+    elif isinstance(image, bytes):
+        nparr = np.frombuffer(image, np.uint8)
+        image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
     if image is None:
         raise FileNotFoundError(f"Unable to load image at {image}")
         
@@ -30,7 +37,7 @@ def draw_boxes_on_image(image, json_data):
     # Loop over each item in the JSON data.
     for item in data:
         bbox = item["bounding_box"]
-        text = str(item["text"])+"-->"+str(item["confidence"])
+        text = str(item["text"])+'/'+str(round(item["confidence"],2))
 
         # Determine the top-left and bottom-right coordinates.
         xs = [pt[0] for pt in bbox]
