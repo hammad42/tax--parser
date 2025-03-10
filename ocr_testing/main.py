@@ -4,7 +4,7 @@ import src.ocr_selection as ocr
 import src.predicted_image as p_image
 
 def main():
-    st.title("File/Folder Location Fetcher")
+    st.title("OCR")
 
     # Initialize session state to store the uploaded files if not already set
     if "uploaded_files" not in st.session_state:
