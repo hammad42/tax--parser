@@ -2,6 +2,7 @@ import streamlit as st
 import os
 import src.ocr_selection as ocr
 import src.predicted_image as p_image
+import src.structured as structured
 
 def main():
     st.title("OCR")
@@ -36,6 +37,9 @@ def main():
                     # Draw bounding boxes or other annotations on the image using your custom function
                     predicted_image = p_image.draw_boxes_on_image(image_bytes, results)
                     st.image(predicted_image, caption=uploaded_file.name, channels="BGR")
+                    st.write(results)
+                    structured.parse_ocr_json(results)
+
                 else:
                     st.error("An error occurred during OCR processing.")
 
