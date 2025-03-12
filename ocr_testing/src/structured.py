@@ -13,18 +13,18 @@ def get_bbox_center(bbox):
 def parse_ocr_json(ocr_data):
     # Define expected keys (based on your OCR output)
     expected_keys = [
-        "Invoice Number",
-        "Total Sales Value",
-        "Total Quantity",
-        "Total Tax Charged",
-        "Discount",
-        "Total Bill Amount",
-        "Date Time",
-        "NTN",
-        "Business Name",
-        "Branch Name",
-        "Branch Address",
-        "POS Counter"
+        "invoicenumber",
+        "totalsalesvalue",
+        "totalquantity",
+        "totaltaxcharged",
+        "discount",
+        "totalbillamount",
+        "datetime",
+        "ntn",
+        "businessname",
+        "branchname",
+        "branchaddress",
+        "poscounter"
     ]
     # Initialize a dictionary to store key-value pairs for this form
     data = {key: "" for key in expected_keys}
@@ -48,7 +48,7 @@ def parse_ocr_json(ocr_data):
         # Check if the text matches an expected key (ignoring ':' if present)
         key_matched = False
         for key in expected_keys:
-            if text.startswith(key) or text.replace(":", "").strip() == key:
+            if text.replace(" ","").lower().startswith(key) or text.replace(":", "").strip() == key:
                 key_matched = True
                 # Look for the next text item as the value (assuming it's below or to the right)
                 j = i + 1
@@ -69,7 +69,7 @@ def parse_ocr_json(ocr_data):
     df = df[expected_keys]
     try:
         # Try to read the existing CSV to check if it's empty
-        existing_df = pd.read_csv("output.csv")
+        existing_df = pd.read_csv("output_ms_ocr.csv")
         append = True # if the file exists and is not empty, append.
     except FileNotFoundError:
         append = False # if the file doesn't exist, create it with header.
@@ -77,9 +77,9 @@ def parse_ocr_json(ocr_data):
         append = False # if the file exists, but is empty, create it with header.
         
     if append:
-        df.to_csv("output.csv", mode='a', header=False, index=False)
+        df.to_csv("output_ms_ocr.csv", mode='a', header=False, index=False)
     else:
-        df.to_csv("output.csv", index=False)
+        df.to_csv("output_ms_ocr.csv", index=False)
     return data
     
 
