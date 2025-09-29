@@ -16,7 +16,7 @@ def get_file_paths_from_path(input_path: str) -> Union[List[str], None]:
         A list of file paths, or None if the input path is invalid.
     """
 
-    image_paths = []
+    image_paths: List[str] = []
 
     if not os.path.exists(input_path):
         print(f"Error: Path does not exist: {input_path}")
@@ -39,3 +39,11 @@ def get_file_paths_from_path(input_path: str) -> Union[List[str], None]:
     else:
         print(f"Error: Invalid path type: {input_path}. It is neither a file nor a folder.")
         return None
+    
+if __name__ == "__main__":
+    # Example usage
+    test_path = "E:\\Projects\\OCR\\ocr_testing\\extras"
+    paths = get_file_paths_from_path(test_path)
+    if paths is not None:
+        for p in paths:
+            print(p)

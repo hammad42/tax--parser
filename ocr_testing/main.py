@@ -1,5 +1,4 @@
 import streamlit as st
-import os
 import src.ocr_selection as ocr
 import src.predicted_image as p_image
 import src.structured as structured
