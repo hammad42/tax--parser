@@ -1,5 +1,5 @@
-import src.ms_ocr as ms_ocr
-import src.paddle_ocr as p_ocr
+from . import ms_ocr
+from . import paddle_ocr as p_ocr
 from typing import List, Dict, Any
 
 def perform_ocr(image_path: str, ocr_tool: str) -> List[Dict[str, Any]]:
