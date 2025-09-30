@@ -10,7 +10,9 @@ def get_bbox_center(bbox):
     center_y = sum(y_coords) / 4
     return center_x, center_y
 
-def parse_ocr_json(ocr_data):
+from typing import List, Dict, Any
+
+def parse_ocr_json(ocr_data: List[Dict[str, Any]]) -> dict:
     # Define expected keys (based on your OCR output)
     expected_keys = [
         "invoicenumber",
