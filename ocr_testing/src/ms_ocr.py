@@ -3,9 +3,9 @@ import os
 from io import BytesIO
 from azure.cognitiveservices.vision.computervision import ComputerVisionClient
 from msrest.authentication import CognitiveServicesCredentials
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Union, BinaryIO
 
-def perform_ocr(image) -> List[Dict[str, Any]]:
+def perform_ocr(image: Union[str, bytes, BinaryIO]) -> List[Dict[str, Any]]:
     """
     Performs OCR on the given image and extracts text.
 
