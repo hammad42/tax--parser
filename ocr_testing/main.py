@@ -1,7 +1,8 @@
 import streamlit as st
+import pandas as pd
 import src.ocr_selection as ocr
 import src.predicted_image as p_image
-# import src.structured as structured
+import src.structured as structured
 
 def main():
     st.title("OCR")
@@ -11,6 +12,8 @@ def main():
         st.session_state["uploaded_files"] = None
     if "ocr_results" not in st.session_state:
         st.session_state["ocr_results"] = {}  # Store results per file
+    if "user_defined_keys" not in st.session_state:
+        st.session_state["user_defined_keys"] = ""
 
     # Step 1: Upload files
     uploaded_files = st.file_uploader("Upload files (or an entire folder)", accept_multiple_files=True)
@@ -46,10 +49,37 @@ def main():
             else:
                 st.write("No OCR results available.")
 
-        # # Example structured parsing call (if needed)
-        # if st.session_state["ocr_results"]:
-        #     for file_name, results in st.session_state["ocr_results"].items():
-        #         structured.parse_ocr_json(results)
+        # Step 3: Structured data extraction
+        if st.session_state["ocr_results"]:
+            st.subheader("Structured Data Extraction")
+            user_keys = st.text_area("Enter comma-separated keys for extraction:", st.session_state["user_defined_keys"])
+            st.session_state["user_defined_keys"] = user_keys
+
+            if st.button("Extract Structured Data"):
+                if user_keys:
+                    keys_list = [key.strip() for key in user_keys.split(",")]
+                    all_structured_data = []
+                    for file_name, results in st.session_state["ocr_results"].items():
+                        st.write(f"Extracting data for {file_name}...")
+                        structured_data = structured.parse_ocr_json(results, keys_list)
+                        if not structured_data.empty:
+                            all_structured_data.append(structured_data)
+
+                    if all_structured_data:
+                        final_df = pd.concat(all_structured_data, ignore_index=True)
+                        st.dataframe(final_df)
+
+                        csv = final_df.to_csv(index=False).encode('utf-8')
+                        st.download_button(
+                            label="Download data as CSV",
+                            data=csv,
+                            file_name="structured_data.csv",
+                            mime="text/csv",
+                        )
+                    else:
+                        st.info("No data extracted based on the provided keys.")
+                else:
+                    st.warning("Please enter at least one key for extraction.")
 
 if __name__ == "__main__":
     main()

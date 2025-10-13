@@ -2,7 +2,7 @@ import os
 from typing import List, Dict, Any
 
 import cv2
-from paddleocr import PaddleOCR, draw_ocr
+from paddleocr import PaddleOCR
 from matplotlib import pyplot as plt
 
 

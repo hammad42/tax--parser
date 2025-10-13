@@ -1,59 +1,61 @@
 import cv2
 import json
 import numpy as np
+from typing import Union, List, Dict, Any, Tuple
 
-
-def draw_boxes_on_image(image, json_data):
+def draw_boxes_on_image(image: Union[str, bytes, np.ndarray], json_data: Union[str, List[Dict[str, Any]]]) -> np.ndarray:
     """
     Draws bounding boxes and text on the given image.
-    
-    Parameters:
-        image (link of image): Input image link.
-        json_data (str or list): JSON string or list of dictionaries containing
-            bounding box coordinates and text. Each item should be a dictionary with keys:
-            - "bounding_box": list of 4 coordinate pairs [[x1,y1],[x2,y2],[x3,y3],[x4,y4]]
-            - "text": the text string to display
-            - "confidence": (optional) confidence score
-       
+
+    Args:
+        image: The input image, which can be a file path (str), image bytes, or a NumPy array.
+        json_data: A JSON string or a list of dictionaries containing bounding box coordinates and text.
+                   Each dictionary should have "bounding_box" and "text" keys. "confidence" is optional.
+
     Returns:
-        np.ndarray: The image with bounding boxes and text drawn on it.
+        A NumPy array representing the image with bounding boxes and text drawn on it.
+
+    Raises:
+        FileNotFoundError: If the image path is invalid.
+        ValueError: If the image format is not supported.
     """
     if isinstance(image, str):
-        image = cv2.imread(image)
-    
-    # If image is bytes, convert it to a NumPy array and decode.
+        img = cv2.imread(image)
+        if img is None:
+            raise FileNotFoundError(f"Unable to load image at {image}")
     elif isinstance(image, bytes):
         nparr = np.frombuffer(image, np.uint8)
-        image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-    if image is None:
-        raise FileNotFoundError(f"Unable to load image at {image}")
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        if img is None:
+            raise ValueError("Could not decode image from bytes.")
+    elif isinstance(image, np.ndarray):
+        img = image
+    else:
+        raise TypeError("Unsupported image type. Please provide a path, bytes, or NumPy array.")
         
-    # If json_data is a string, parse it.
     if isinstance(json_data, str):
         data = json.loads(json_data)
     else:
         data = json_data
 
-    # Loop over each item in the JSON data.
     for item in data:
-        bbox = item["bounding_box"]
-        text = str(item["text"])+'/'+str(round(item["confidence"],2))
+        bbox: List[Tuple[int, int]] = item["bounding_box"]
+        text = str(item["text"])
 
-        # Determine the top-left and bottom-right coordinates.
+        if "confidence" in item:
+            confidence = item.get("confidence", 0.0)
+            text += f'/{confidence:.2f}'
+
         xs = [pt[0] for pt in bbox]
         ys = [pt[1] for pt in bbox]
-        top_left = (int(min(xs)), int(min(ys)))# it is requirement that coordinates are integer
-        bottom_right = (int(max(xs)), int(max(ys)))# it is requirement that coordinates are integer
+        top_left = (int(min(xs)), int(min(ys)))
+        bottom_right = (int(max(xs)), int(max(ys)))
 
-        # Draw the rectangle (using green color and a thickness of 2).
-        cv2.rectangle(image, top_left, bottom_right, color=(0, 255, 0), thickness=2)
-
-        # Put the text above the top-left corner (using red color).
-        # Adjust font scale and thickness as needed.
-        cv2.putText(image, text, (top_left[0], top_left[1] - 1),
+        cv2.rectangle(img, top_left, bottom_right, color=(0, 255, 0), thickness=2)
+        cv2.putText(img, text, (top_left[0], top_left[1] - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.5, color=(0, 0, 255), thickness=1)
 
-    return image
+    return img
 
 # Example usage:
 if __name__ == "__main__":
