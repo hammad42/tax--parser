@@ -1,7 +1,7 @@
 import streamlit as st
 import src.ocr_selection as ocr
 import src.predicted_image as p_image
-# import src.structured as structured
+import src.structured as structured
 
 def main():
     st.title("OCR")
@@ -39,12 +39,15 @@ def main():
                     st.error(f"An error occurred during OCR processing for {uploaded_file.name}.")
 
         # Display and edit results
-        for file_name, results in st.session_state["ocr_results"].items():
-            st.subheader(f"Results for {file_name}")
-            if results:
-                st.session_state["ocr_results"][file_name] = st.data_editor(results, key=f"editor_{file_name}")
-            else:
-                st.write("No OCR results available.")
+        if st.session_state["ocr_results"]:
+            for file_name, results in st.session_state["ocr_results"].items():
+                st.subheader(f"Results for {file_name}")
+                if results:
+                    edited_results = st.data_editor(results, key=f"editor_{file_name}")
+                    st.session_state["ocr_results"][file_name] = edited_results
+                    structured.parse_ocr_json(edited_results)
+                else:
+                    st.write("No OCR results available.")
 
         # # Example structured parsing call (if needed)
         # if st.session_state["ocr_results"]:
