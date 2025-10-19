@@ -58,6 +58,8 @@ def main():
                 if all_parsed_data:
                     structured.save_data_to_csv(all_parsed_data)
                     st.success("Data saved to output_ms_ocr.csv")
+                    st.session_state["ocr_results"] = {}
+                    st.rerun()
 
 if __name__ == "__main__":
     main()
