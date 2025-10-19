@@ -45,14 +45,19 @@ def main():
                 if results:
                     edited_results = st.data_editor(results, key=f"editor_{file_name}")
                     st.session_state["ocr_results"][file_name] = edited_results
-                    structured.parse_ocr_json(edited_results)
                 else:
                     st.write("No OCR results available.")
 
-        # # Example structured parsing call (if needed)
-        # if st.session_state["ocr_results"]:
-        #     for file_name, results in st.session_state["ocr_results"].items():
-        #         structured.parse_ocr_json(results)
+            if st.button("Save to CSV"):
+                all_parsed_data = []
+                for file_name, results in st.session_state["ocr_results"].items():
+                    if results:
+                        parsed_data = structured.parse_ocr_data(results)
+                        all_parsed_data.append(parsed_data)
+
+                if all_parsed_data:
+                    structured.save_data_to_csv(all_parsed_data)
+                    st.success("Data saved to output_ms_ocr.csv")
 
 if __name__ == "__main__":
     main()

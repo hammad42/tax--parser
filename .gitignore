@@ -1,2 +1,2 @@
-ocr_testing/samples/
-ocr_testing/output/
+__pycache__/
+*.pyc
