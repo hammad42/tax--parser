@@ -1,5 +1,6 @@
-__pycache__/
-*.pyc
-.gitignore
+samples/
+outputs/
 E:/Projects/OCR/ocr_testing/.ipynb_checkpoints/
-E:\Projects\OCR\output_ms_ocr.csv
+__pycache__/
+E:/Projects/OCR/output_ms_ocr.csv
+*.pyc
