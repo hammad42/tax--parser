@@ -5,6 +5,26 @@ from azure.cognitiveservices.vision.computervision import ComputerVisionClient
 from msrest.authentication import CognitiveServicesCredentials
 from typing import Dict, List, Any, Union, BinaryIO
 
+# Global variable to hold the ComputerVisionClient instance
+client = None
+
+
+def get_computervision_client():
+    """
+    Initializes and returns a singleton ComputerVisionClient instance.
+    """
+    global client
+    if client is None:
+        azure_endpoint = os.environ.get('AZURE_ENDPOINT')
+        azure_key = os.environ.get('AZURE_KEY')
+
+        if not azure_endpoint or not azure_key:
+            raise ValueError("Azure Endpoint or Key not found in environment variables.")
+
+        client = ComputerVisionClient(azure_endpoint, CognitiveServicesCredentials(azure_key))
+    return client
+
+
 def perform_ocr(image: Union[str, bytes, BinaryIO]) -> List[Dict[str, Any]]:
     """
     Performs OCR on the given image and extracts text.
@@ -16,27 +36,20 @@ def perform_ocr(image: Union[str, bytes, BinaryIO]) -> List[Dict[str, Any]]:
         A list of dictionaries, where each dictionary contains extracted text and bounding box information.
         Returns an empty list on error.
     """
-    azure_endpoint = os.environ.get('AZURE_ENDPOINT')
-    azure_key = os.environ.get('AZURE_KEY')
-
-    if not azure_endpoint or not azure_key:
-        print("Error: Azure Endpoint or Key not found in environment variables.")
-        return []
-
     try:
-        client = ComputerVisionClient(azure_endpoint, CognitiveServicesCredentials(azure_key))
-        
+        computervision_client = get_computervision_client()
+
         # Check if image is a string (file path)
         if isinstance(image, str):
             with open(image, "rb") as image_file:
-                response = client.read_in_stream(image_file, raw=True)
+                response = computervision_client.read_in_stream(image_file, raw=True)
         # If image is bytes, wrap it in BytesIO to make it file-like
         elif isinstance(image, bytes):
             stream = BytesIO(image)
-            response = client.read_in_stream(stream, raw=True)
+            response = computervision_client.read_in_stream(stream, raw=True)
         # If it's already a file-like object, use it directly
         elif hasattr(image, "read"):
-            response = client.read_in_stream(image, raw=True)
+            response = computervision_client.read_in_stream(image, raw=True)
         else:
             print("Error: Unsupported image input type.")
             return []
@@ -46,12 +59,12 @@ def perform_ocr(image: Union[str, bytes, BinaryIO]) -> List[Dict[str, Any]]:
 
         # Poll for the result
         while True:
-            result = client.get_read_result(operation_id)
+            result = computervision_client.get_read_result(operation_id)
             if result.status.lower() not in ['notstarted', 'running']:
                 break
             time.sleep(0.1)
 
-        result = client.get_read_result(operation_id)
+        result = computervision_client.get_read_result(operation_id)
         return _extract_text_from_new_format(result.as_dict())
 
     except FileNotFoundError:
