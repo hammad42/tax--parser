@@ -3,6 +3,31 @@ import json
 import numpy as np
 
 
+def get_color_gradient(confidence):
+    """
+    Calculates a color in a red-to-green gradient based on the confidence score.
+
+    Parameters:
+        confidence (float): The confidence score, expected to be between 0 and 1.
+
+    Returns:
+        tuple: A tuple representing the BGR color (blue, green, red).
+    """
+    if confidence >= 1.0:
+        return (0, 255, 0)  # Pure green
+    if confidence <= 0.85:
+        return (0, 0, 255)  # Pure red
+
+    # Normalize the confidence score to a value between 0 and 1 within the 0.85-1.0 range.
+    normalized_confidence = (confidence - 0.85) / (1.0 - 0.85)
+
+    # Linearly interpolate the red and green color components.
+    red = 255 * (1 - normalized_confidence)
+    green = 255 * normalized_confidence
+
+    return (0, int(green), int(red))
+
+
 def draw_boxes_on_image(image, json_data):
     """
     Draws bounding boxes and text on the given image.
@@ -37,7 +62,16 @@ def draw_boxes_on_image(image, json_data):
     # Loop over each item in the JSON data.
     for item in data:
         bbox = item["bounding_box"]
-        text = str(item["text"])+'/'+str(round(item["confidence"],2))
+        confidence = item.get("confidence", 1.0)
+
+        # Get the color for the bounding box.
+        color = get_color_gradient(confidence)
+
+        # Conditionally format the text.
+        if confidence < 0.90:
+            text = f"{item['text']}/{confidence:.2f}"
+        else:
+            text = str(item["text"])
 
         # Determine the top-left and bottom-right coordinates.
         xs = [pt[0] for pt in bbox]
@@ -45,8 +79,8 @@ def draw_boxes_on_image(image, json_data):
         top_left = (int(min(xs)), int(min(ys)))# it is requirement that coordinates are integer
         bottom_right = (int(max(xs)), int(max(ys)))# it is requirement that coordinates are integer
 
-        # Draw the rectangle (using green color and a thickness of 2).
-        cv2.rectangle(image, top_left, bottom_right, color=(0, 255, 0), thickness=2)
+        # Draw the rectangle (using the calculated color and a thickness of 2).
+        cv2.rectangle(image, top_left, bottom_right, color=color, thickness=2)
 
         # Put the text above the top-left corner (using red color).
         # Adjust font scale and thickness as needed.
@@ -57,11 +91,11 @@ def draw_boxes_on_image(image, json_data):
 
 # Example usage:
 if __name__ == "__main__":
-    # Load your image
-    image = r"E:\Projects\OCR\ocr_testing\samples\color_images\Screenshot_20250211-235652_1.png"
+    # Create a dummy black image
+    image = np.zeros((1000, 500, 3), np.uint8)
 
     # Your JSON data (as provided in your example)
-    json_str = [{"bounding_box":[[21,12],[172,12],[172,29],[21,29]],"text":"Invoice Number:","confidence":0.975},{"bounding_box":[[21,47],[226,47],[226,65],[21,66]],"text":"17256224121322859780","confidence":0.978},{"bounding_box":[[23,94],[183,94],[183,112],[23,112]],"text":"Total Sales Value:","confidence":0.994},{"bounding_box":[[21,130],[87,131],[87,148],[21,148]],"text":"3333.91","confidence":0.995},{"bounding_box":[[23,176],[155,177],[155,198],[23,197]],"text":"Total Quantity:","confidence":0.994},{"bounding_box":[[23,214],[61,214],[62,231],[23,230]],"text":"9.00","confidence":0.993},{"bounding_box":[[21,259],[195,260],[194,280],[21,279]],"text":"Total Tax Charged:","confidence":0.994},{"bounding_box":[[23,296],[84,296],[84,313],[23,313]],"text":"600.09","confidence":0.994},{"bounding_box":[[22,342],[108,342],[108,360],[22,360]],"text":"Discount:","confidence":0.994},{"bounding_box":[[22,379],[61,379],[61,396],[22,395]],"text":"0.00","confidence":0.993},{"bounding_box":[[22,425],[181,425],[181,443],[22,442]],"text":"Total Bill Amount:","confidence":0.989},{"bounding_box":[[21,462],[95,462],[95,479],[22,479]],"text":"3935.62","confidence":0.997},{"bounding_box":[[22,508],[122,508],[122,526],[22,525]],"text":"Date Time:","confidence":0.993},{"bounding_box":[[22,544],[262,544],[262,562],[22,562]],"text":"2024-12-13T22:05:00+05:00","confidence":0.848},{"bounding_box":[[22,592],[61,590],[62,607],[22,607]],"text":"NTN:","confidence":0.989},{"bounding_box":[[23,627],[123,627],[123,645],[23,644]],"text":"8009003-2","confidence":0.991},{"bounding_box":[[22,674],[166,675],[166,691],[21,690]],"text":"Business Name:","confidence":0.994},{"bounding_box":[[22,710],[217,710],[217,727],[22,728]],"text":"C PLUS SUPER MARKET","confidence":0.991},{"bounding_box":[[22,757],[153,757],[153,774],[22,774]],"text":"Branch Name:","confidence":0.994},{"bounding_box":[[21,790],[308,790],[308,813],[21,813]],"text":"C PLUS SUPER MARKET (UP Morr)","confidence":0.989},{"bounding_box":[[21,838],[171,839],[171,858],[21,857]],"text":"Branch Address:","confidence":0.994},{"bounding_box":[[22,873],[405,873],[405,895],[22,895]],"text":"Plot A-01 (ST-09) sector 11-1 north karachi","confidence":0.928},{"bounding_box":[[22,921],[144,922],[143,940],[22,939]],"text":"POS Counter:","confidence":0.994},{"bounding_box":[[22,957],[84,957],[84,976],[21,975]],"text":"172562","confidence":0.994}]
+    json_str = [{"bounding_box":[[21,12],[172,12],[172,29],[21,29]],"text":"Invoice Number:","confidence":1.0},{"bounding_box":[[21,47],[226,47],[226,65],[21,66]],"text":"17256224121322859780","confidence":0.978},{"bounding_box":[[23,94],[183,94],[183,112],[23,112]],"text":"Total Sales Value:","confidence":0.95},{"bounding_box":[[21,130],[87,131],[87,148],[21,148]],"text":"3333.91","confidence":0.925},{"bounding_box":[[23,176],[155,177],[155,198],[23,197]],"text":"Total Quantity:","confidence":0.90},{"bounding_box":[[23,214],[61,214],[62,231],[23,230]],"text":"9.00","confidence":0.88},{"bounding_box":[[21,259],[195,260],[194,280],[21,279]],"text":"Total Tax Charged:","confidence":0.85},{"bounding_box":[[23,296],[84,296],[84,313],[23,313]],"text":"600.09","confidence":0.82},{"bounding_box":[[22,342],[108,342],[108,360],[22,360]],"text":"Discount:","confidence":0.75},{"bounding_box":[[22,379],[61,379],[61,396],[22,395]],"text":"0.00","confidence":0.993},{"bounding_box":[[22,425],[181,425],[181,443],[22,442]],"text":"Total Bill Amount:","confidence":0.989},{"bounding_box":[[21,462],[95,462],[95,479],[22,479]],"text":"3935.62","confidence":0.997},{"bounding_box":[[22,508],[122,508],[122,526],[22,525]],"text":"Date Time:","confidence":0.993},{"bounding_box":[[22,544],[262,544],[262,562],[22,562]],"text":"2024-12-13T22:05:00+05:00","confidence":0.848},{"bounding_box":[[22,592],[61,590],[62,607],[22,607]],"text":"NTN:","confidence":0.989},{"bounding_box":[[23,627],[123,627],[123,645],[23,644]],"text":"8009003-2","confidence":0.991},{"bounding_box":[[22,674],[166,675],[166,691],[21,690]],"text":"Business Name:","confidence":0.994},{"bounding_box":[[22,710],[217,710],[217,727],[22,728]],"text":"C PLUS SUPER MARKET","confidence":0.991},{"bounding_box":[[22,757],[153,757],[153,774],[22,774]],"text":"Branch Name:","confidence":0.994},{"bounding_box":[[21,790],[308,790],[308,813],[21,813]],"text":"C PLUS SUPER MARKET (UP Morr)","confidence":0.989},{"bounding_box":[[21,838],[171,839],[171,858],[21,857]],"text":"Branch Address:","confidence":0.994},{"bounding_box":[[22,873],[405,873],[405,895],[22,895]],"text":"Plot A-01 (ST-09) sector 11-1 north karachi","confidence":0.928},{"bounding_box":[[22,921],[144,922],[143,940],[22,939]],"text":"POS Counter:","confidence":0.994},{"bounding_box":[[22,957],[84,957],[84,976],[21,975]],"text":"172562","confidence":0.994}]
     
     # Draw boxes and text over image
     output_image = draw_boxes_on_image(image, json_str)
